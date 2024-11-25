@@ -1,0 +1,60 @@
+use anchor_lang::prelude::*;
+
+declare_id!("YourProgramIdHere");
+
+#[program]
+pub mod solana_recycling_dapp {
+    use super::*;
+
+    pub fn declare_recycling_center(
+        ctx: Context<DeclareRecyclingCenter>,
+        latitude: f32,
+        longitude: f32,
+        recycling_type: u8,
+    ) -> ProgramResult {
+        let recycling_center = &mut ctx.accounts.recycling_center;
+        recycling_center.is_initialized = true;
+        recycling_center.latitude = latitude;
+        recycling_center.longitude = longitude;
+        recycling_center.recycling_type = recycling_type;
+        recycling_center.declared_count = 1;
+        recycling_center.declarer = *ctx.accounts.user.key;
+        Ok(())
+    }
+
+    pub fn validate_recycling_center(
+        ctx: Context<ValidateRecyclingCenter>,
+    ) -> ProgramResult {
+        let recycling_center = &mut ctx.accounts.recycling_center;
+        recycling_center.declared_count += 1;
+        // Add reward logic here if necessary
+        Ok(())
+    }
+}
+
+#[derive(Accounts)]
+pub struct DeclareRecyclingCenter<'info> {
+    #[account(init, payer = user, space = 8 + 4 + 4 + 1 + 4 + 32)]
+    pub recycling_center: Account<'info, RecyclingCenter>,
+    #[account(mut)]
+    pub user: Signer<'info>,
+    pub system_program: Program<'info, System>,
+}
+
+#[derive(Accounts)]
+pub struct ValidateRecyclingCenter<'info> {
+    #[account(mut)]
+    pub recycling_center: Account<'info, RecyclingCenter>,
+    #[account(mut)]
+    pub user: Signer<'info>,
+}
+
+#[account]
+pub struct RecyclingCenter {
+    pub is_initialized: bool,
+    pub latitude: f32,
+    pub longitude: f32,
+    pub recycling_type: u8,
+    pub declared_count: u32,
+    pub declarer: Pubkey,
+}
