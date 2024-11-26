@@ -1,0 +1,29 @@
+package com.example.solanarecyclingapp;
+
+import com.solana.core.PublicKey;
+import com.solana.core.Transaction;
+import com.solana.programs.SystemProgram;
+import com.solana.rpc.Cluster;
+import com.solana.rpc.RpcClient;
+import com.solana.rpc.RpcException;
+import com.solana.rpc.types.ConfirmedTransaction;
+
+public class SolanaService {
+
+    private static final String PROGRAM_ID = "YourProgramIdHere";
+    private RpcClient client;
+
+    public SolanaService() {
+        client = new RpcClient(Cluster.DEVNET);
+    }
+
+    public void declareRecyclingCenter(String userPrivateKey, float latitude, float longitude, int recyclingType) throws RpcException {
+        PublicKey userPublicKey = new PublicKey(userPrivateKey);
+        Transaction transaction = new Transaction();
+
+        // Add your transaction instructions here
+
+        ConfirmedTransaction confirmedTransaction = client.getApi().sendTransaction(transaction, userPublicKey);
+        System.out.println("Transaction Signature: " + confirmedTransaction.getTransaction().getSignature());
+    }
+}
