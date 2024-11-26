@@ -1,0 +1,31 @@
+package com.example.solanarecyclingapp;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.Button;
+import android.widget.EditText;
+import androidx.appcompat.app.AppCompatActivity;
+
+public class WalletActivity extends AppCompatActivity {
+
+    private EditText walletAddressEditText;
+    private Button connectButton;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_wallet);
+
+        walletAddressEditText = findViewById(R.id.walletAddressEditText);
+        connectButton = findViewById(R.id.connectButton);
+
+        connectButton.setOnClickListener(v -> {
+            String walletAddress = walletAddressEditText.getText().toString();
+            Intent resultIntent = new Intent();
+            resultIntent.putExtra("walletAddress", walletAddress);
+            setResult(Activity.RESULT_OK, resultIntent);
+            finish();
+        });
+    }
+}
