@@ -1,0 +1,103 @@
+const { Connection, PublicKey, clusterApiUrl, Transaction, SystemProgram, Keypair } = solanaWeb3;
+
+const connection = new Connection(clusterApiUrl('devnet'), 'confirmed');
+const programId = new PublicKey('YourProgramIdHere'); // Replace with your program ID
+
+let walletAddress = null;
+
+document.getElementById('connectWalletButton').addEventListener('click', connectWallet);
+
+async function connectWallet() {
+    if (window.solana && window.solana.isPhantom) {
+        try {
+            const response = await window.solana.connect();
+            walletAddress = response.publicKey.toString();
+            document.getElementById('walletAddress').textContent = walletAddress;
+            document.getElementById('walletInfo').style.display = 'block';
+            console.log('Connected with Public Key:', walletAddress);
+        } catch (err) {
+            console.error('Wallet connection error:', err);
+        }
+    } else {
+        alert('Phantom wallet is not installed. Please install it from https://phantom.app/');
+    }
+}
+
+document.getElementById('recycleForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const latitude = parseFloat(form.latitude.value);
+    const longitude = parseFloat(form.longitude.value);
+    const recyclingType = parseInt(form.recycling_type.value);
+
+    try {
+        await declareRecyclingCenter(latitude, longitude, recyclingType);
+        alert('Recycling center declared successfully!');
+    } catch (err) {
+        console.error('Error declaring recycling center:', err);
+        alert('Error declaring recycling center');
+    }
+});
+
+document.getElementById('searchButton').addEventListener('click', async () => {
+    const searchType = parseInt(document.getElementById('search_type').value);
+    try {
+        const results = await searchRecyclingPlaces(searchType);
+        displaySearchResults(results);
+    } catch (err) {
+        console.error('Error searching recycling places:', err);
+        alert('Error searching recycling places');
+    }
+});
+
+async function declareRecyclingCenter(latitude, longitude, recyclingType) {
+    if (!walletAddress) {
+        alert('Please connect your wallet first');
+        return;
+    }
+
+    const buffer = Buffer.alloc(9);
+    buffer.writeFloatLE(latitude, 0);
+    buffer.writeFloatLE(longitude, 4);
+    buffer.writeUInt8(recyclingType, 8);
+
+    const recyclingCenterAccount = Keypair.generate();
+    const lamports = await connection.getMinimumBalanceForRentExemption(9);
+
+    const transaction = new Transaction().add(
+        SystemProgram.createAccount({
+            fromPubkey: new PublicKey(walletAddress),
+            newAccountPubkey: recyclingCenterAccount.publicKey,
+            lamports,
+            space: 9,
+            programId,
+        }),
+        new solanaWeb3.TransactionInstruction({
+            keys: [
+                { pubkey: new PublicKey(walletAddress), isSigner: true, isWritable: true },
+                { pubkey: recyclingCenterAccount.publicKey, isSigner: false, isWritable: true },
+            ],
+            programId,
+            data: buffer,
+        })
+    );
+
+    await window.solana.signAndSendTransaction(transaction)
+        .then((signature) => connection.confirmTransaction(signature, 'confirmed'));
+
+    console.log('Recycling center declared:', recyclingCenterAccount.publicKey.toString());
+}
+
+async function searchRecyclingPlaces(recyclingType) {
+    // This function should be implemented to fetch and filter recycling places based on the type
+}
+
+function displaySearchResults(results) {
+    const resultsList = document.getElementById('results');
+    resultsList.innerHTML = '';
+    results.forEach((result) => {
+        const li = document.createElement('li');
+        li.textContent = `Latitude: ${result.latitude}, Longitude: ${result.longitude}`;
+        resultsList.appendChild(li);
+    });
+}
