@@ -1,0 +1,18 @@
+// Add these methods inside MainActivity
+
+private void declareRecyclingCenter(float latitude, float longitude, int recyclingType) {
+    SolanaService solanaService = new SolanaService();
+    try {
+        solanaService.declareRecyclingCenter("userPrivateKey", latitude, longitude, recyclingType); // Use real private key management
+        Toast.makeText(this, "Recycling center declared!", Toast.LENGTH_SHORT).show();
+    } catch (Exception e) {
+        e.printStackTrace();
+        Toast.makeText(this, "Error declaring recycling center", Toast.LENGTH_SHORT).show();
+    }
+}
+
+private void searchRecyclingPlaces(int recyclingType) {
+    // Implement the search logic here
+}
+
+// Call these methods appropriately in your UI
